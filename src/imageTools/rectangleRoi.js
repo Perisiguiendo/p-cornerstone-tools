@@ -1,17 +1,17 @@
-import external from '../externalModules.js';
-import mouseButtonTool from './mouseButtonTool.js';
-import touchTool from './touchTool.js';
-import toolStyle from '../stateManagement/toolStyle.js';
-import toolColors from '../stateManagement/toolColors.js';
-import drawHandles from '../manipulators/drawHandles.js';
-import drawTextBox from '../util/drawTextBox.js';
-import calculateSUV from '../util/calculateSUV.js';
-import { getToolState } from '../stateManagement/toolState.js';
+import external from "../externalModules.js";
+import mouseButtonTool from "./mouseButtonTool.js";
+import touchTool from "./touchTool.js";
+import toolStyle from "../stateManagement/toolStyle.js";
+import toolColors from "../stateManagement/toolColors.js";
+import drawHandles from "../manipulators/drawHandles.js";
+import drawTextBox from "../util/drawTextBox.js";
+import calculateSUV from "../util/calculateSUV.js";
+import { getToolState } from "../stateManagement/toolState.js";
 
-const toolType = 'rectangleRoi';
+const toolType = "rectangleRoi";
 
 // /////// BEGIN ACTIVE TOOL ///////
-function createNewMeasurement (mouseEventData) {
+function createNewMeasurement(mouseEventData) {
   // Create the measurement data for this tool with the end handle activated
   const measurementData = {
     visible: true,
@@ -22,13 +22,13 @@ function createNewMeasurement (mouseEventData) {
         x: mouseEventData.currentPoints.image.x,
         y: mouseEventData.currentPoints.image.y,
         highlight: true,
-        active: false
+        active: false,
       },
       end: {
         x: mouseEventData.currentPoints.image.x,
         y: mouseEventData.currentPoints.image.y,
         highlight: true,
-        active: true
+        active: true,
       },
       textBox: {
         active: false,
@@ -36,16 +36,16 @@ function createNewMeasurement (mouseEventData) {
         movesIndependently: false,
         drawnIndependently: true,
         allowedOutsideImage: true,
-        hasBoundingBox: true
-      }
-    }
+        hasBoundingBox: true,
+      },
+    },
   };
 
   return measurementData;
 }
 // /////// END ACTIVE TOOL ///////
 
-function pointNearTool (element, data, coords) {
+function pointNearTool(element, data, coords) {
   const cornerstone = external.cornerstone;
   const startCanvas = cornerstone.pixelToCanvas(element, data.handles.start);
   const endCanvas = cornerstone.pixelToCanvas(element, data.handles.end);
@@ -54,18 +54,20 @@ function pointNearTool (element, data, coords) {
     left: Math.min(startCanvas.x, endCanvas.x),
     top: Math.min(startCanvas.y, endCanvas.y),
     width: Math.abs(startCanvas.x - endCanvas.x),
-    height: Math.abs(startCanvas.y - endCanvas.y)
+    height: Math.abs(startCanvas.y - endCanvas.y),
   };
 
-  const distanceToPoint = external.cornerstoneMath.rect.distanceToPoint(rect, coords);
+  const distanceToPoint = external.cornerstoneMath.rect.distanceToPoint(
+    rect,
+    coords
+  );
 
-
-  return (distanceToPoint < 5);
+  return distanceToPoint < 5;
 }
 
 // /////// BEGIN IMAGE RENDERING ///////
 
-function calculateMeanStdDev (sp, ellipse) {
+function calculateMeanStdDev(sp, ellipse) {
   // TODO: Get a real statistics library here that supports large counts
 
   let sum = 0;
@@ -87,7 +89,7 @@ function calculateMeanStdDev (sp, ellipse) {
       count,
       mean: 0.0,
       variance: 0.0,
-      stdDev: 0.0
+      stdDev: 0.0,
     };
   }
 
@@ -98,20 +100,20 @@ function calculateMeanStdDev (sp, ellipse) {
     count,
     mean,
     variance,
-    stdDev: Math.sqrt(variance)
+    stdDev: Math.sqrt(variance),
   };
 }
 
-function numberWithCommas (x) {
+function numberWithCommas(x) {
   // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
-  const parts = x.toString().split('.');
+  const parts = x.toString().split(".");
 
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-  return parts.join('.');
+  return parts.join(".");
 }
 
-function onImageRendered (e) {
+function onImageRendered(e) {
   const eventData = e.detail;
 
   // If we have no toolData for this element, return immediately as there is nothing to do
@@ -126,8 +128,11 @@ function onImageRendered (e) {
   const element = eventData.element;
   const lineWidth = toolStyle.getToolWidth();
   const config = rectangleRoi.getConfiguration();
-  const context = eventData.canvasContext.canvas.getContext('2d');
-  const seriesModule = cornerstone.metaData.get('generalSeriesModule', image.imageId);
+  const context = eventData.canvasContext.canvas.getContext("2d");
+  const seriesModule = cornerstone.metaData.get(
+    "generalSeriesModule",
+    image.imageId
+  );
   let modality;
 
   if (seriesModule) {
@@ -144,7 +149,7 @@ function onImageRendered (e) {
 
     // Apply any shadow settings defined in the tool configuration
     if (config && config.shadow) {
-      context.shadowColor = config.shadowColor || '#000000';
+      context.shadowColor = config.shadowColor || "#000000";
       context.shadowOffsetX = config.shadowOffsetX || 1;
       context.shadowOffsetY = config.shadowOffsetY || 1;
     }
@@ -153,8 +158,14 @@ function onImageRendered (e) {
     const color = toolColors.getColorIfActive(data.active);
 
     // Convert Image coordinates to Canvas coordinates given the element
-    const handleStartCanvas = cornerstone.pixelToCanvas(element, data.handles.start);
-    const handleEndCanvas = cornerstone.pixelToCanvas(element, data.handles.end);
+    const handleStartCanvas = cornerstone.pixelToCanvas(
+      element,
+      data.handles.start
+    );
+    const handleEndCanvas = cornerstone.pixelToCanvas(
+      element,
+      data.handles.end
+    );
 
     // Retrieve the bounds of the ellipse (left, top, width, and height)
     // In Canvas coordinates
@@ -180,7 +191,7 @@ function onImageRendered (e) {
         // If the tool is inactive, draw the handles only if each specific handle is being
         // Hovered over
         const handleOptions = {
-          drawHandlesIfActive: true
+          drawHandlesIfActive: true,
         };
 
         drawHandles(context, eventData, data.handles, color, handleOptions);
@@ -191,9 +202,7 @@ function onImageRendered (e) {
     }
 
     // Define variables for the area and mean/standard deviation
-    let area,
-      meanStdDev,
-      meanStdDevSUV;
+    let area, meanStdDev, meanStdDevSUV;
 
     // Perform a check to see if the tool has been invalidated. This is to prevent
     // Unnecessary re-calculation of the area, mean, and standard deviation if the
@@ -211,19 +220,25 @@ function onImageRendered (e) {
         left: Math.min(data.handles.start.x, data.handles.end.x),
         top: Math.min(data.handles.start.y, data.handles.end.y),
         width: Math.abs(data.handles.start.x - data.handles.end.x),
-        height: Math.abs(data.handles.start.y - data.handles.end.y)
+        height: Math.abs(data.handles.start.y - data.handles.end.y),
       };
 
       // First, make sure this is not a color image, since no mean / standard
       // Deviation will be calculated for color images.
       if (!image.color) {
         // Retrieve the array of pixels that the ellipse bounds cover
-        const pixels = cornerstone.getPixels(element, ellipse.left, ellipse.top, ellipse.width, ellipse.height);
+        const pixels = cornerstone.getPixels(
+          element,
+          ellipse.left,
+          ellipse.top,
+          ellipse.width,
+          ellipse.height
+        );
 
         // Calculate the mean & standard deviation from the pixels and the ellipse details
         meanStdDev = calculateMeanStdDev(pixels, ellipse);
 
-        if (modality === 'PT') {
+        if (modality === "PT") {
           // If the image is from a PET scan, use the DICOM tags to
           // Calculate the SUV from the mean and standard deviation.
 
@@ -232,8 +247,14 @@ function onImageRendered (e) {
           // Returning the values to storedPixel values before calcuating SUV with them.
           // TODO: Clean this up? Should we add an option to not scale in calculateSUV?
           meanStdDevSUV = {
-            mean: calculateSUV(image, (meanStdDev.mean - image.intercept) / image.slope),
-            stdDev: calculateSUV(image, (meanStdDev.stdDev - image.intercept) / image.slope)
+            mean: calculateSUV(
+              image,
+              (meanStdDev.mean - image.intercept) / image.slope
+            ),
+            stdDev: calculateSUV(
+              image,
+              (meanStdDev.stdDev - image.intercept) / image.slope
+            ),
           };
         }
 
@@ -250,7 +271,8 @@ function onImageRendered (e) {
       const rowPixelSpacing = image.rowPixelSpacing || 1;
 
       // Calculate the image area from the ellipse dimensions and pixel spacing
-      area = (ellipse.width * columnPixelSpacing) * (ellipse.height * rowPixelSpacing);
+      area =
+        ellipse.width * columnPixelSpacing * (ellipse.height * rowPixelSpacing);
 
       // If the area value is sane, store it for later retrieval
       if (!isNaN(area)) {
@@ -265,56 +287,59 @@ function onImageRendered (e) {
     const textLines = [];
 
     // If the mean and standard deviation values are present, display them
-    if (meanStdDev && meanStdDev.mean) {
-      // If the modality is CT, add HU to denote Hounsfield Units
-      let moSuffix = '';
+    // If (meanStdDev && meanStdDev.mean) {
+    //   // If the modality is CT, add HU to denote Hounsfield Units
+    //   Let moSuffix = '';
 
-      if (modality === 'CT') {
-        moSuffix = ' HU';
-      }
+    //   If (modality === 'CT') {
+    //     MoSuffix = ' HU';
+    //   }
 
-      // Create a line of text to display the mean and any units that were specified (i.e. HU)
-      let meanText = `Mean: ${numberWithCommas(meanStdDev.mean.toFixed(2))}${moSuffix}`;
-      // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
-      let stdDevText = `StdDev: ${numberWithCommas(meanStdDev.stdDev.toFixed(2))}${moSuffix}`;
+    //   // Create a line of text to display the mean and any units that were specified (i.e. HU)
+    //   Let meanText = `Mean: ${numberWithCommas(meanStdDev.mean.toFixed(2))}${moSuffix}`;
+    //   // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
+    //   Let stdDevText = `StdDev: ${numberWithCommas(meanStdDev.stdDev.toFixed(2))}${moSuffix}`;
 
-      // If this image has SUV values to display, concatenate them to the text line
-      if (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
-        const SUVtext = ' SUV: ';
+    //   // If this image has SUV values to display, concatenate them to the text line
+    //   If (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
+    //     Const SUVtext = ' SUV: ';
 
-        meanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
-        stdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
-      }
+    //     MeanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
+    //     StdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
+    //   }
 
-      // Add these text lines to the array to be displayed in the textbox
-      textLines.push(meanText);
-      textLines.push(stdDevText);
-    }
+    //   // Add these text lines to the array to be displayed in the textbox
+    //   TextLines.push(meanText);
+    //   TextLines.push(stdDevText);
+    // }
 
-    // If the area is a sane value, display it
-    if (area) {
-      // Determine the area suffix based on the pixel spacing in the image.
-      // If pixel spacing is present, use millimeters. Otherwise, use pixels.
-      // This uses Char code 178 for a superscript 2
-      let suffix = ` mm${String.fromCharCode(178)}`;
+    // // If the area is a sane value, display it
+    // If (area) {
+    //   // Determine the area suffix based on the pixel spacing in the image.
+    //   // If pixel spacing is present, use millimeters. Otherwise, use pixels.
+    //   // This uses Char code 178 for a superscript 2
+    //   Let suffix = ` mm${String.fromCharCode(178)}`;
 
-      if (!image.rowPixelSpacing || !image.columnPixelSpacing) {
-        suffix = ` pixels${String.fromCharCode(178)}`;
-      }
+    //   If (!image.rowPixelSpacing || !image.columnPixelSpacing) {
+    //     Suffix = ` pixels${String.fromCharCode(178)}`;
+    //   }
 
-      // Create a line of text to display the area and its units
-      const areaText = `Area: ${numberWithCommas(area.toFixed(2))}${suffix}`;
+    //   // Create a line of text to display the area and its units
+    //   Const areaText = `Area: ${numberWithCommas(area.toFixed(2))}${suffix}`;
 
-      // Add this text line to the array to be displayed in the textbox
-      textLines.push(areaText);
-    }
+    //   // Add this text line to the array to be displayed in the textbox
+    //   TextLines.push(areaText);
+    // }
 
     // If the textbox has not been moved by the user, it should be displayed on the right-most
     // Side of the tool.
     if (!data.handles.textBox.hasMoved) {
       // Find the rightmost side of the ellipse at its vertical center, and place the textbox here
       // Note that this calculates it in image coordinates
-      data.handles.textBox.x = Math.max(data.handles.start.x, data.handles.end.x);
+      data.handles.textBox.x = Math.max(
+        data.handles.start.x,
+        data.handles.end.x
+      );
       data.handles.textBox.y = (data.handles.start.y + data.handles.end.y) / 2;
     }
 
@@ -325,13 +350,19 @@ function onImageRendered (e) {
     const options = {
       centering: {
         x: false,
-        y: true
-      }
+        y: true,
+      },
     };
 
     // Draw the textbox and retrieves it's bounding box for mouse-dragging and highlighting
-    const boundingBox = drawTextBox(context, textLines, textCoords.x,
-      textCoords.y, color, options);
+    const boundingBox = drawTextBox(
+      context,
+      textLines,
+      textCoords.x,
+      textCoords.y,
+      color,
+      options
+    );
 
     // Store the bounding box data in the handle for mouse-dragging and highlighting
     data.handles.textBox.boundingBox = boundingBox;
@@ -348,55 +379,71 @@ function onImageRendered (e) {
         start: {},
         end: {
           x: textCoords.x,
-          y: textCoords.y
-        }
+          y: textCoords.y,
+        },
       };
 
       // First we calculate the ellipse points (top, left, right, and bottom)
-      const ellipsePoints = [{
-        // Top middle point of ellipse
-        x: leftCanvas + widthCanvas / 2,
-        y: topCanvas
-      }, {
-        // Left middle point of ellipse
-        x: leftCanvas,
-        y: topCanvas + heightCanvas / 2
-      }, {
-        // Bottom middle point of ellipse
-        x: leftCanvas + widthCanvas / 2,
-        y: topCanvas + heightCanvas
-      }, {
-        // Right middle point of ellipse
-        x: leftCanvas + widthCanvas,
-        y: topCanvas + heightCanvas / 2
-      }];
+      const ellipsePoints = [
+        {
+          // Top middle point of ellipse
+          x: leftCanvas + widthCanvas / 2,
+          y: topCanvas,
+        },
+        {
+          // Left middle point of ellipse
+          x: leftCanvas,
+          y: topCanvas + heightCanvas / 2,
+        },
+        {
+          // Bottom middle point of ellipse
+          x: leftCanvas + widthCanvas / 2,
+          y: topCanvas + heightCanvas,
+        },
+        {
+          // Right middle point of ellipse
+          x: leftCanvas + widthCanvas,
+          y: topCanvas + heightCanvas / 2,
+        },
+      ];
 
       // We obtain the link starting point by finding the closest point on the ellipse to the
       // Center of the textbox
-      link.start = external.cornerstoneMath.point.findClosestPoint(ellipsePoints, link.end);
+      link.start = external.cornerstoneMath.point.findClosestPoint(
+        ellipsePoints,
+        link.end
+      );
 
       // Next we calculate the corners of the textbox bounding box
-      const boundingBoxPoints = [{
-        // Top middle point of bounding box
-        x: boundingBox.left + boundingBox.width / 2,
-        y: boundingBox.top
-      }, {
-        // Left middle point of bounding box
-        x: boundingBox.left,
-        y: boundingBox.top + boundingBox.height / 2
-      }, {
-        // Bottom middle point of bounding box
-        x: boundingBox.left + boundingBox.width / 2,
-        y: boundingBox.top + boundingBox.height
-      }, {
-        // Right middle point of bounding box
-        x: boundingBox.left + boundingBox.width,
-        y: boundingBox.top + boundingBox.height / 2
-      }];
+      const boundingBoxPoints = [
+        {
+          // Top middle point of bounding box
+          x: boundingBox.left + boundingBox.width / 2,
+          y: boundingBox.top,
+        },
+        {
+          // Left middle point of bounding box
+          x: boundingBox.left,
+          y: boundingBox.top + boundingBox.height / 2,
+        },
+        {
+          // Bottom middle point of bounding box
+          x: boundingBox.left + boundingBox.width / 2,
+          y: boundingBox.top + boundingBox.height,
+        },
+        {
+          // Right middle point of bounding box
+          x: boundingBox.left + boundingBox.width,
+          y: boundingBox.top + boundingBox.height / 2,
+        },
+      ];
 
       // Now we recalculate the link endpoint by identifying which corner of the bounding box
       // Is closest to the start point we just calculated.
-      link.end = external.cornerstoneMath.point.findClosestPoint(boundingBoxPoints, link.start);
+      link.end = external.cornerstoneMath.point.findClosestPoint(
+        boundingBoxPoints,
+        link.start
+      );
 
       // Finally we draw the dashed linking line
       context.beginPath();
@@ -418,17 +465,14 @@ const rectangleRoi = mouseButtonTool({
   createNewMeasurement,
   onImageRendered,
   pointNearTool,
-  toolType
+  toolType,
 });
 
 const rectangleRoiTouch = touchTool({
   createNewMeasurement,
   onImageRendered,
   pointNearTool,
-  toolType
+  toolType,
 });
 
-export {
-  rectangleRoi,
-  rectangleRoiTouch
-};
+export { rectangleRoi, rectangleRoiTouch };

@@ -1,4 +1,4 @@
-/*! cornerstone-tools - 2.0.0 - 2017-12-13 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
+/*! p-cornerstone-tools - 0.0.2 - 2022-12-22 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -11816,7 +11816,7 @@ var _toolState = __webpack_require__(2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var toolType = 'ellipticalRoi';
+var toolType = "ellipticalRoi";
 
 // /////// BEGIN ACTIVE TOOL ///////
 function createNewMeasurement(mouseEventData) {
@@ -11893,11 +11893,11 @@ function pointNearToolTouch(element, data, coords) {
 
 function numberWithCommas(x) {
   // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
-  var parts = x.toString().split('.');
+  var parts = x.toString().split(".");
 
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-  return parts.join('.');
+  return parts.join(".");
 }
 
 function onImageRendered(e) {
@@ -11915,8 +11915,8 @@ function onImageRendered(e) {
   var element = eventData.element;
   var lineWidth = _toolStyle2.default.getToolWidth();
   var config = ellipticalRoi.getConfiguration();
-  var context = eventData.canvasContext.canvas.getContext('2d');
-  var seriesModule = cornerstone.metaData.get('generalSeriesModule', image.imageId);
+  var context = eventData.canvasContext.canvas.getContext("2d");
+  var seriesModule = cornerstone.metaData.get("generalSeriesModule", image.imageId);
   var modality = void 0;
 
   if (seriesModule) {
@@ -11933,7 +11933,7 @@ function onImageRendered(e) {
 
     // Apply any shadow settings defined in the tool configuration
     if (config && config.shadow) {
-      context.shadowColor = config.shadowColor || '#000000';
+      context.shadowColor = config.shadowColor || "#000000";
       context.shadowOffsetX = config.shadowOffsetX || 1;
       context.shadowOffsetY = config.shadowOffsetY || 1;
     }
@@ -12012,7 +12012,7 @@ function onImageRendered(e) {
         // Calculate the mean & standard deviation from the pixels and the ellipse details
         meanStdDev = (0, _calculateEllipseStatistics2.default)(pixels, ellipse);
 
-        if (modality === 'PT') {
+        if (modality === "PT") {
           // If the image is from a PET scan, use the DICOM tags to
           // Calculate the SUV from the mean and standard deviation.
 
@@ -12054,49 +12054,49 @@ function onImageRendered(e) {
     var textLines = [];
 
     // If the mean and standard deviation values are present, display them
-    if (meanStdDev && meanStdDev.mean !== undefined) {
-      // If the modality is CT, add HU to denote Hounsfield Units
-      var moSuffix = '';
+    // If (meanStdDev && meanStdDev.mean !== undefined) {
+    //   // If the modality is CT, add HU to denote Hounsfield Units
+    //   Let moSuffix = '';
 
-      if (modality === 'CT') {
-        moSuffix = ' HU';
-      }
+    //   If (modality === 'CT') {
+    //     MoSuffix = ' HU';
+    //   }
 
-      // Create a line of text to display the mean and any units that were specified (i.e. HU)
-      var meanText = 'Mean: ' + numberWithCommas(meanStdDev.mean.toFixed(2)) + moSuffix;
-      // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
-      var stdDevText = 'StdDev: ' + numberWithCommas(meanStdDev.stdDev.toFixed(2)) + moSuffix;
+    //   // Create a line of text to display the mean and any units that were specified (i.e. HU)
+    //   Let meanText = `Mean: ${numberWithCommas(meanStdDev.mean.toFixed(2))}${moSuffix}`;
+    //   // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
+    //   Let stdDevText = `StdDev: ${numberWithCommas(meanStdDev.stdDev.toFixed(2))}${moSuffix}`;
 
-      // If this image has SUV values to display, concatenate them to the text line
-      if (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
-        var SUVtext = ' SUV: ';
+    //   // If this image has SUV values to display, concatenate them to the text line
+    //   If (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
+    //     Const SUVtext = ' SUV: ';
 
-        meanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
-        stdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
-      }
+    //     MeanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
+    //     StdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
+    //   }
 
-      // Add these text lines to the array to be displayed in the textbox
-      textLines.push(meanText);
-      textLines.push(stdDevText);
-    }
+    //   // Add these text lines to the array to be displayed in the textbox
+    //   TextLines.push(meanText);
+    //   TextLines.push(stdDevText);
+    // }
 
-    // If the area is a sane value, display it
-    if (area) {
-      // Determine the area suffix based on the pixel spacing in the image.
-      // If pixel spacing is present, use millimeters. Otherwise, use pixels.
-      // This uses Char code 178 for a superscript 2
-      var suffix = ' mm' + String.fromCharCode(178);
+    // // If the area is a sane value, display it
+    // If (area) {
+    //   // Determine the area suffix based on the pixel spacing in the image.
+    //   // If pixel spacing is present, use millimeters. Otherwise, use pixels.
+    //   // This uses Char code 178 for a superscript 2
+    //   Let suffix = ` mm${String.fromCharCode(178)}`;
 
-      if (!image.rowPixelSpacing || !image.columnPixelSpacing) {
-        suffix = ' pixels' + String.fromCharCode(178);
-      }
+    //   If (!image.rowPixelSpacing || !image.columnPixelSpacing) {
+    //     Suffix = ` pixels${String.fromCharCode(178)}`;
+    //   }
 
-      // Create a line of text to display the area and its units
-      var areaText = 'Area: ' + numberWithCommas(area.toFixed(2)) + suffix;
+    //   // Create a line of text to display the area and its units
+    //   Const areaText = `Area: ${numberWithCommas(area.toFixed(2))}${suffix}`;
 
-      // Add this text line to the array to be displayed in the textbox
-      textLines.push(areaText);
-    }
+    //   // Add this text line to the array to be displayed in the textbox
+    //   TextLines.push(areaText);
+    // }
 
     // If the textbox has not been moved by the user, it should be displayed on the right-most
     // Side of the tool.
@@ -14045,7 +14045,7 @@ var _toolState = __webpack_require__(2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var toolType = 'rectangleRoi';
+var toolType = "rectangleRoi";
 
 // /////// BEGIN ACTIVE TOOL ///////
 function createNewMeasurement(mouseEventData) {
@@ -14140,11 +14140,11 @@ function calculateMeanStdDev(sp, ellipse) {
 
 function numberWithCommas(x) {
   // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
-  var parts = x.toString().split('.');
+  var parts = x.toString().split(".");
 
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-  return parts.join('.');
+  return parts.join(".");
 }
 
 function onImageRendered(e) {
@@ -14162,8 +14162,8 @@ function onImageRendered(e) {
   var element = eventData.element;
   var lineWidth = _toolStyle2.default.getToolWidth();
   var config = rectangleRoi.getConfiguration();
-  var context = eventData.canvasContext.canvas.getContext('2d');
-  var seriesModule = cornerstone.metaData.get('generalSeriesModule', image.imageId);
+  var context = eventData.canvasContext.canvas.getContext("2d");
+  var seriesModule = cornerstone.metaData.get("generalSeriesModule", image.imageId);
   var modality = void 0;
 
   if (seriesModule) {
@@ -14180,7 +14180,7 @@ function onImageRendered(e) {
 
     // Apply any shadow settings defined in the tool configuration
     if (config && config.shadow) {
-      context.shadowColor = config.shadowColor || '#000000';
+      context.shadowColor = config.shadowColor || "#000000";
       context.shadowOffsetX = config.shadowOffsetX || 1;
       context.shadowOffsetY = config.shadowOffsetY || 1;
     }
@@ -14259,7 +14259,7 @@ function onImageRendered(e) {
         // Calculate the mean & standard deviation from the pixels and the ellipse details
         meanStdDev = calculateMeanStdDev(pixels, ellipse);
 
-        if (modality === 'PT') {
+        if (modality === "PT") {
           // If the image is from a PET scan, use the DICOM tags to
           // Calculate the SUV from the mean and standard deviation.
 
@@ -14301,49 +14301,49 @@ function onImageRendered(e) {
     var textLines = [];
 
     // If the mean and standard deviation values are present, display them
-    if (meanStdDev && meanStdDev.mean) {
-      // If the modality is CT, add HU to denote Hounsfield Units
-      var moSuffix = '';
+    // If (meanStdDev && meanStdDev.mean) {
+    //   // If the modality is CT, add HU to denote Hounsfield Units
+    //   Let moSuffix = '';
 
-      if (modality === 'CT') {
-        moSuffix = ' HU';
-      }
+    //   If (modality === 'CT') {
+    //     MoSuffix = ' HU';
+    //   }
 
-      // Create a line of text to display the mean and any units that were specified (i.e. HU)
-      var meanText = 'Mean: ' + numberWithCommas(meanStdDev.mean.toFixed(2)) + moSuffix;
-      // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
-      var stdDevText = 'StdDev: ' + numberWithCommas(meanStdDev.stdDev.toFixed(2)) + moSuffix;
+    //   // Create a line of text to display the mean and any units that were specified (i.e. HU)
+    //   Let meanText = `Mean: ${numberWithCommas(meanStdDev.mean.toFixed(2))}${moSuffix}`;
+    //   // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
+    //   Let stdDevText = `StdDev: ${numberWithCommas(meanStdDev.stdDev.toFixed(2))}${moSuffix}`;
 
-      // If this image has SUV values to display, concatenate them to the text line
-      if (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
-        var SUVtext = ' SUV: ';
+    //   // If this image has SUV values to display, concatenate them to the text line
+    //   If (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
+    //     Const SUVtext = ' SUV: ';
 
-        meanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
-        stdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
-      }
+    //     MeanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
+    //     StdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
+    //   }
 
-      // Add these text lines to the array to be displayed in the textbox
-      textLines.push(meanText);
-      textLines.push(stdDevText);
-    }
+    //   // Add these text lines to the array to be displayed in the textbox
+    //   TextLines.push(meanText);
+    //   TextLines.push(stdDevText);
+    // }
 
-    // If the area is a sane value, display it
-    if (area) {
-      // Determine the area suffix based on the pixel spacing in the image.
-      // If pixel spacing is present, use millimeters. Otherwise, use pixels.
-      // This uses Char code 178 for a superscript 2
-      var suffix = ' mm' + String.fromCharCode(178);
+    // // If the area is a sane value, display it
+    // If (area) {
+    //   // Determine the area suffix based on the pixel spacing in the image.
+    //   // If pixel spacing is present, use millimeters. Otherwise, use pixels.
+    //   // This uses Char code 178 for a superscript 2
+    //   Let suffix = ` mm${String.fromCharCode(178)}`;
 
-      if (!image.rowPixelSpacing || !image.columnPixelSpacing) {
-        suffix = ' pixels' + String.fromCharCode(178);
-      }
+    //   If (!image.rowPixelSpacing || !image.columnPixelSpacing) {
+    //     Suffix = ` pixels${String.fromCharCode(178)}`;
+    //   }
 
-      // Create a line of text to display the area and its units
-      var areaText = 'Area: ' + numberWithCommas(area.toFixed(2)) + suffix;
+    //   // Create a line of text to display the area and its units
+    //   Const areaText = `Area: ${numberWithCommas(area.toFixed(2))}${suffix}`;
 
-      // Add this text line to the array to be displayed in the textbox
-      textLines.push(areaText);
-    }
+    //   // Add this text line to the array to be displayed in the textbox
+    //   TextLines.push(areaText);
+    // }
 
     // If the textbox has not been moved by the user, it should be displayed on the right-most
     // Side of the tool.
@@ -17270,7 +17270,7 @@ exports.adaptiveBrush = adaptiveBrush;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = '2.0.0';
+exports.default = '0.0.2';
 
 /***/ })
 /******/ ]);
