@@ -1,57 +1,50 @@
 const path = require('path');
+const webpack = require('webpack');
 const rootPath = process.cwd();
-const context = path.join(rootPath, 'src');
+const context = path.join(rootPath, "src");
 const outputPath = path.join(rootPath, 'dist');
 const bannerPlugin = require('./plugins/banner');
 
 module.exports = {
-  mode: 'development',
   context: context,
   entry: {
-    cornerstoneTools: path.join(context, 'index.js'),
+    cornerstoneTools: './index.js'
   },
-  devtool: 'source-map',
+  target: 'web',
   output: {
     filename: '[name].js',
-    library: {
-      commonjs: 'cornerstone-tools',
-      amd: 'cornerstone-tools',
-      root: 'cornerstoneTools',
-    },
+    library: '[name]',
     libraryTarget: 'umd',
     path: outputPath,
-    umdNamedDefine: true,
+    umdNamedDefine: true
   },
+  devtool: 'source-map',
   externals: {
     'cornerstone-math': {
-      commonjs: 'cornerstone-math',
-      commonjs2: 'cornerstone-math',
-      amd: 'cornerstone-math',
-      root: 'cornerstoneMath',
-    },
+      commonjs: "cornerstone-math",
+      commonjs2: "cornerstone-math",
+      amd: "cornerstone-math",
+      root: 'cornerstoneMath'
+    }
   },
   module: {
-    rules: [
-      {
-        enforce: 'pre',
-        test: /\.js$/,
-        exclude: /(node_modules|test)/,
-        loader: 'eslint-loader',
-        options: {
-          failOnError: false,
-        },
-      },
-      {
-        test: /\.m?js$/,
-        exclude: /(node_modules)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            babelrc: true,
-          },
-        },
-      },
-    ],
+    rules: [{
+      enforce: 'pre',
+      test: /\.js$/,
+      exclude: /(node_modules|test)/,
+      loader: 'eslint-loader',
+      options: {
+        failOnError: false
+      }
+    }, {
+      test: /\.js$/,
+      exclude: /(node_modules)/,
+      use: [{
+        loader: 'babel-loader'
+      }]
+    }]
   },
-  plugins: [bannerPlugin()],
+  plugins: [
+    bannerPlugin()
+  ]
 };
