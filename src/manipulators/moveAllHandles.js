@@ -3,77 +3,268 @@ import external from '../externalModules.js';
 import anyHandlesOutsideImage from './anyHandlesOutsideImage.js';
 import { removeToolState } from '../stateManagement/toolState.js';
 import triggerEvent from '../util/triggerEvent.js';
+import { clipToBox } from '../util/clip.js';
+import { state } from './../store/index.js';
+import getActiveTool from '../util/getActiveTool';
+import BaseAnnotationTool from '../tools/base/BaseAnnotationTool';
+import { getLogger } from '../util/logger.js';
+import { getModule } from '../store';
 
-export default function (e, data, toolData, toolType, options, doneMovingCallback) {
-  const cornerstone = external.cornerstone;
-  const mouseEventData = e.detail;
-  const element = mouseEventData.element;
+const logger = getLogger('manipulators:moveAllHandles');
 
-  function mouseDragCallback (e) {
-    const eventData = e.detail;
+const manipulatorStateModule = getModule('manipulatorState');
 
-    data.active = true;
+const _dragEvents = {
+  mouse: [EVENTS.MOUSE_DRAG],
+  touch: [EVENTS.TOUCH_DRAG],
+};
 
-    Object.keys(data.handles).forEach(function (name) {
-      const handle = data.handles[name];
+const _upOrEndEvents = {
+  mouse: [EVENTS.MOUSE_UP, EVENTS.MOUSE_CLICK],
+  touch: [
+    EVENTS.TOUCH_END,
+    EVENTS.TOUCH_DRAG_END,
+    EVENTS.TOUCH_PINCH,
+    EVENTS.TOUCH_PRESS,
+    EVENTS.TAP,
+  ],
+};
 
-      if (handle.movesIndependently === true) {
-        return;
-      }
+/**
+ * Manipulator to move all provided handles at the same time
+ * @public
+ * @function moveAllHandles
+ * @memberof Manipulators
+ *
+ * @param {*}        evtDetail
+ * @param {*}        evtDetail.element
+ * @param {String}   toolName
+ * @param {*}        annotation
+ * @param {*}        [handle=null] - not needed by moveAllHandles, but keeps call signature the same as `moveHandle`
+ * @param {Object}   [options={}]
+ * @param {Boolean}  [options.deleteIfHandleOutsideImage]
+ * @param {Boolean}  [options.preventHandleOutsideImage]
+ * @param {string}   [interactionType=mouse]
+ * @param {function} [doneMovingCallback]
+ * @returns {undefined}
+ */
+export default function(
+  { element },
+  toolName,
+  annotation,
+  handle,
+  options = {},
+  interactionType = 'mouse',
+  doneMovingCallback
+) {
+  // Use global defaults, unless overidden by provided options
+  options = Object.assign(
+    {
+      deleteIfHandleOutsideImage: state.deleteIfHandleOutsideImage,
+      preventHandleOutsideImage: state.preventHandleOutsideImage,
+    },
+    options
+  );
 
-      handle.x += eventData.deltaPoints.image.x;
-      handle.y += eventData.deltaPoints.image.y;
+  const dragHandler = _dragHandler.bind(
+    this,
+    toolName,
+    annotation,
+    options,
+    interactionType
+  );
+  // So we don't need to inline the entire `upOrEndHandler` function
+  const upOrEndHandler = evt => {
+    _upOrEndHandler(
+      toolName,
+      annotation,
+      options,
+      interactionType,
+      {
+        dragHandler,
+        upOrEndHandler,
+      },
+      evt,
+      doneMovingCallback
+    );
+  };
 
-      if (options.preventHandleOutsideImage === true) {
-        handle.x = Math.max(handle.x, 0);
-        handle.x = Math.min(handle.x, eventData.image.width);
-
-        handle.y = Math.max(handle.y, 0);
-        handle.y = Math.min(handle.y, eventData.image.height);
-      }
-    });
-
-    cornerstone.updateImage(element);
-
-    const eventType = EVENTS.MEASUREMENT_MODIFIED;
-    const modifiedEventData = {
-      toolType,
+  manipulatorStateModule.setters.addActiveManipulatorForElement(
+    element,
+    _cancelEventHandler.bind(
+      null,
+      annotation,
+      options,
+      interactionType,
+      {
+        dragHandler,
+        upOrEndHandler,
+      },
       element,
-      measurementData: data
-    };
+      doneMovingCallback
+    )
+  );
 
-    triggerEvent(element, eventType, modifiedEventData);
+  annotation.active = true;
+  state.isToolLocked = true;
 
-    e.preventDefault();
-    e.stopPropagation();
-  }
+  // Add Event Listeners
+  _dragEvents[interactionType].forEach(eventType => {
+    element.addEventListener(eventType, dragHandler);
+  });
+  _upOrEndEvents[interactionType].forEach(eventType => {
+    element.addEventListener(eventType, upOrEndHandler);
+  });
+}
 
-  element.addEventListener(EVENTS.MOUSE_DRAG, mouseDragCallback);
+function _dragHandler(
+  toolName,
+  annotation,
+  options = {},
+  interactionType,
+  evt
+) {
+  const { element, image, buttons } = evt.detail;
+  const { x, y } = evt.detail.deltaPoints.image;
 
-  function mouseUpCallback (e) {
-    const eventData = e.detail;
+  annotation.active = true;
+  annotation.invalidated = true;
 
-    data.invalidated = true;
+  const handleKeys = Object.keys(annotation.handles);
 
-    element.removeEventListener(EVENTS.MOUSE_DRAG, mouseDragCallback);
-    element.removeEventListener(EVENTS.MOUSE_UP, mouseUpCallback);
-    element.removeEventListener(EVENTS.MOUSE_CLICK, mouseUpCallback);
+  for (let i = 0; i < handleKeys.length; i++) {
+    const key = handleKeys[i];
+    const handle = annotation.handles[key];
 
-    // If any handle is outside the image, delete the tool data
-    if (options.deleteIfHandleOutsideImage === true &&
-            anyHandlesOutsideImage(eventData, data.handles)) {
-      removeToolState(element, toolType, data);
+    if (
+      // Don't move this part of the annotation
+      handle.movesIndependently === true ||
+      // Not a true handle
+      !handle.hasOwnProperty('x') ||
+      !handle.hasOwnProperty('y')
+    ) {
+      continue;
     }
 
-    cornerstone.updateImage(element);
+    handle.x += x;
+    handle.y += y;
 
-    if (typeof doneMovingCallback === 'function') {
-      doneMovingCallback();
+    if (options.preventHandleOutsideImage) {
+      clipToBox(handle, image);
     }
   }
 
-  element.addEventListener(EVENTS.MOUSE_UP, mouseUpCallback);
-  element.addEventListener(EVENTS.MOUSE_CLICK, mouseUpCallback);
+  external.cornerstone.updateImage(element);
 
-  return true;
+  const activeTool = getActiveTool(element, buttons, interactionType);
+
+  if (activeTool instanceof BaseAnnotationTool) {
+    activeTool.updateCachedStats(image, element, annotation);
+  }
+
+  const eventType = EVENTS.MEASUREMENT_MODIFIED;
+  const modifiedEventData = {
+    toolName,
+    toolType: toolName, // Deprecation notice: toolType will be replaced by toolName
+    element,
+    measurementData: annotation,
+  };
+
+  triggerEvent(element, eventType, modifiedEventData);
+
+  evt.preventDefault();
+  evt.stopPropagation();
+}
+
+function _cancelEventHandler(
+  annotation,
+  options = {},
+  interactionType,
+  { dragHandler, upOrEndHandler },
+  element,
+  doneMovingCallback
+) {
+  _endHandler(
+    annotation,
+    options,
+    interactionType,
+    {
+      dragHandler,
+      upOrEndHandler,
+    },
+    element,
+    doneMovingCallback,
+    false
+  );
+}
+
+function _upOrEndHandler(
+  toolName,
+  annotation,
+  options = {},
+  interactionType,
+  { dragHandler, upOrEndHandler },
+  evt,
+  doneMovingCallback
+) {
+  const eventData = evt.detail;
+  const { element } = eventData;
+
+  manipulatorStateModule.setters.removeActiveManipulatorForElement(element);
+
+  // If any handle is outside the image, delete the tool data
+  if (
+    options.deleteIfHandleOutsideImage &&
+    anyHandlesOutsideImage(eventData, annotation.handles)
+  ) {
+    removeToolState(element, toolName, annotation);
+  }
+
+  _endHandler(
+    annotation,
+    options,
+    interactionType,
+    {
+      dragHandler,
+      upOrEndHandler,
+    },
+    element,
+    doneMovingCallback,
+    true
+  );
+}
+
+function _endHandler(
+  annotation,
+  options = {},
+  interactionType,
+  { dragHandler, upOrEndHandler },
+  element,
+  doneMovingCallback,
+  success = true
+) {
+  annotation.active = false;
+  annotation.invalidated = true;
+  state.isToolLocked = false;
+
+  // Remove Event Listeners
+  _dragEvents[interactionType].forEach(eventType => {
+    element.removeEventListener(eventType, dragHandler);
+  });
+  _upOrEndEvents[interactionType].forEach(eventType => {
+    element.removeEventListener(eventType, upOrEndHandler);
+  });
+
+  if (typeof options.doneMovingCallback === 'function') {
+    logger.warn(
+      '`options.doneMovingCallback` has been depricated. See https://github.com/cornerstonejs/cornerstoneTools/pull/915 for details.'
+    );
+    options.doneMovingCallback(success);
+  }
+
+  if (typeof doneMovingCallback === 'function') {
+    doneMovingCallback(success);
+  }
+
+  external.cornerstone.updateImage(element);
 }

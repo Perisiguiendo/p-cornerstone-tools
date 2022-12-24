@@ -1,13 +1,23 @@
-// This implements a frame-of-reference specific tool state management strategy.  This means that
-// Measurement data are tied to a specific frame of reference UID and only visible to objects using
-// That frame-of-reference UID
-
-function newFrameOfReferenceSpecificToolStateManager () {
+/**
+ * Implements a frame-of-reference specific tool state management strategy.  This means that
+ * Measurement data are tied to a specific frame of reference UID and only visible to objects using
+ * That frame-of-reference UID.
+ * @public
+ * @constructor newFrameOfReferenceSpecificToolStateManager
+ * @memberof StateManagement
+ *
+ * @returns {Object} A frameOfReferenceSpecificToolStateManager instance.
+ */
+function newFrameOfReferenceSpecificToolStateManager() {
   const toolState = {};
 
   // Here we add tool state, this is done by tools as well
   // As modules that restore saved state
-  function addFrameOfReferenceSpecificToolState (frameOfReference, toolType, data) {
+  function addFrameOfReferenceSpecificToolState(
+    frameOfReference,
+    toolName,
+    data
+  ) {
     // If we don't have any tool state for this frameOfReference, add an empty object
     if (toolState.hasOwnProperty(frameOfReference) === false) {
       toolState[frameOfReference] = {};
@@ -16,13 +26,13 @@ function newFrameOfReferenceSpecificToolStateManager () {
     const frameOfReferenceToolState = toolState[frameOfReference];
 
     // If we don't have tool state for this type of tool, add an empty object
-    if (frameOfReferenceToolState.hasOwnProperty(toolType) === false) {
-      frameOfReferenceToolState[toolType] = {
-        data: []
+    if (frameOfReferenceToolState.hasOwnProperty(toolName) === false) {
+      frameOfReferenceToolState[toolName] = {
+        data: [],
       };
     }
 
-    const toolData = frameOfReferenceToolState[toolType];
+    const toolData = frameOfReferenceToolState[toolName];
 
     // Finally, add this new tool to the state
     toolData.data.push(data);
@@ -30,7 +40,7 @@ function newFrameOfReferenceSpecificToolStateManager () {
 
   // Here you can get state - used by tools as well as modules
   // That save state persistently
-  function getFrameOfReferenceSpecificToolState (frameOfReference, toolType) {
+  function getFrameOfReferenceSpecificToolState(frameOfReference, toolName) {
     // If we don't have any tool state for this frame of reference, return undefined
     if (toolState.hasOwnProperty(frameOfReference) === false) {
       return;
@@ -39,17 +49,20 @@ function newFrameOfReferenceSpecificToolStateManager () {
     const frameOfReferenceToolState = toolState[frameOfReference];
 
     // If we don't have tool state for this type of tool, return undefined
-    if (frameOfReferenceToolState.hasOwnProperty(toolType) === false) {
+    if (frameOfReferenceToolState.hasOwnProperty(toolName) === false) {
       return;
     }
 
-    const toolData = frameOfReferenceToolState[toolType];
-
+    const toolData = frameOfReferenceToolState[toolName];
 
     return toolData;
   }
 
-  function removeFrameOfReferenceSpecificToolState (frameOfReference, toolType, data) {
+  function removeFrameOfReferenceSpecificToolState(
+    frameOfReference,
+    toolName,
+    data
+  ) {
     // If we don't have any tool state for this frame of reference, return undefined
     if (toolState.hasOwnProperty(frameOfReference) === false) {
       return;
@@ -58,11 +71,11 @@ function newFrameOfReferenceSpecificToolStateManager () {
     const frameOfReferenceToolState = toolState[frameOfReference];
 
     // If we don't have tool state for this type of tool, return undefined
-    if (frameOfReferenceToolState.hasOwnProperty(toolType) === false) {
+    if (frameOfReferenceToolState.hasOwnProperty(toolName) === false) {
       return;
     }
 
-    const toolData = frameOfReferenceToolState[toolType];
+    const toolData = frameOfReferenceToolState[toolName];
     // Find this tool data
     let indexOfData = -1;
 
@@ -80,7 +93,7 @@ function newFrameOfReferenceSpecificToolStateManager () {
   return {
     get: getFrameOfReferenceSpecificToolState,
     add: addFrameOfReferenceSpecificToolState,
-    remove: removeFrameOfReferenceSpecificToolState
+    remove: removeFrameOfReferenceSpecificToolState,
   };
 }
 
@@ -90,5 +103,5 @@ const globalFrameOfReferenceSpecificToolStateManager = newFrameOfReferenceSpecif
 
 export {
   newFrameOfReferenceSpecificToolStateManager,
-  globalFrameOfReferenceSpecificToolStateManager
+  globalFrameOfReferenceSpecificToolStateManager,
 };

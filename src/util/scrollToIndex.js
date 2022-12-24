@@ -1,11 +1,19 @@
 import EVENTS from '../events.js';
 import external from '../externalModules.js';
 import { getToolState } from '../stateManagement/toolState.js';
-import requestPoolManager from '../requestPool/requestPoolManager.js';
 import loadHandlerManager from '../stateManagement/loadHandlerManager.js';
 import triggerEvent from '../util/triggerEvent.js';
 
-export default function (element, newImageIdIndex) {
+/**
+ * Scrolls through the stack to the image index requested.
+ * @export @public @method
+ * @name scrollToIndex
+ *
+ * @param  {type} element         The element to scroll through.
+ * @param  {type} newImageIdIndex The target image index.
+ * @returns {void}
+ */
+export default function(element, newImageIdIndex) {
   const toolData = getToolState(element, 'stack');
 
   if (!toolData || !toolData.data || !toolData.data.length) {
@@ -19,7 +27,11 @@ export default function (element, newImageIdIndex) {
   if (toolData.data.length > 1) {
     const stackRendererData = getToolState(element, 'stackRenderer');
 
-    if (stackRendererData && stackRendererData.data && stackRendererData.data.length) {
+    if (
+      stackRendererData &&
+      stackRendererData.data &&
+      stackRendererData.data.length
+    ) {
       stackRenderer = stackRendererData.data[0];
     }
   }
@@ -31,11 +43,13 @@ export default function (element, newImageIdIndex) {
     newImageIdIndex += stackData.imageIds.length;
   }
 
-  const startLoadingHandler = loadHandlerManager.getStartLoadHandler();
-  const endLoadingHandler = loadHandlerManager.getEndLoadHandler();
-  const errorLoadingHandler = loadHandlerManager.getErrorLoadingHandler();
+  const startLoadingHandler = loadHandlerManager.getStartLoadHandler(element);
+  const endLoadingHandler = loadHandlerManager.getEndLoadHandler(element);
+  const errorLoadingHandler = loadHandlerManager.getErrorLoadingHandler(
+    element
+  );
 
-  function doneCallback (image) {
+  function doneCallback(image) {
     if (stackData.currentImageIdIndex !== newImageIdIndex) {
       return;
     }
@@ -45,7 +59,7 @@ export default function (element, newImageIdIndex) {
     try {
       // TODO: Add 'isElementEnabled' to Cornerstone?
       cornerstone.getEnabledElement(element);
-    } catch(error) {
+    } catch (error) {
       return;
     }
 
@@ -61,7 +75,7 @@ export default function (element, newImageIdIndex) {
     }
   }
 
-  function failCallback (error) {
+  function failCallback(error) {
     const imageId = stackData.imageIds[newImageIdIndex];
 
     if (errorLoadingHandler) {
@@ -79,7 +93,7 @@ export default function (element, newImageIdIndex) {
 
   const eventData = {
     newImageIdIndex,
-    direction: newImageIdIndex - stackData.currentImageIdIndex
+    direction: newImageIdIndex - stackData.currentImageIdIndex,
   };
 
   stackData.currentImageIdIndex = newImageIdIndex;
@@ -111,8 +125,6 @@ export default function (element, newImageIdIndex) {
   }
 
   imagePromise.then(doneCallback, failCallback);
-  // Make sure we kick off any changed download request pools
-  requestPoolManager.startGrabbing();
 
   triggerEvent(element, EVENTS.STACK_SCROLL, eventData);
 }
