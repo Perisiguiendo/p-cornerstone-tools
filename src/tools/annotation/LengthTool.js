@@ -233,7 +233,7 @@ export default class LengthTool extends BaseAnnotationTool {
           }
         }
 
-        const text = '';
+        const text = textBoxText(data, rowPixelSpacing, colPixelSpacing);
 
         drawLinkedTextBox(
           context,
